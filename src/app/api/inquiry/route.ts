@@ -7,6 +7,9 @@ import {
 import { createStreamingResponse } from "@/lib/stream";
 import { InquiryRequest } from "@/types";
 
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   try {
     const body: InquiryRequest = await request.json();
