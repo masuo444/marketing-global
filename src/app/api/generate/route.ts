@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const userMessage = buildUserMessage(brand, contentType, languages, tone);
 
-    const stream = createStreamingResponse(systemPrompt, [
+    const stream = await createStreamingResponse(systemPrompt, [
       { role: "user", content: userMessage },
     ]);
 

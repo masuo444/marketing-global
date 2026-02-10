@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       tone
     );
 
-    const stream = createStreamingResponse(systemPrompt, [
+    const stream = await createStreamingResponse(systemPrompt, [
       { role: "user", content: userMessage },
     ]);
 
