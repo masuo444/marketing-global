@@ -1,6 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const client = new Anthropic();
+function getClient(): OpenAI {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "",
+  });
+}
 
 export function createStreamingResponse(
   systemPrompt: string,
@@ -11,19 +15,27 @@ export function createStreamingResponse(
   return new ReadableStream({
     async start(controller) {
       try {
-        const stream = await client.messages.stream({
-          model: "claude-sonnet-4-5-20250929",
+        const client = getClient();
+
+        const messages: OpenAI.ChatCompletionMessageParam[] = [
+          { role: "system", content: systemPrompt },
+          ...userMessages.map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
+        ];
+
+        const stream = await client.chat.completions.create({
+          model: "gpt-4o",
           max_tokens: 4096,
-          system: systemPrompt,
-          messages: userMessages,
+          stream: true,
+          messages,
         });
 
-        for await (const event of stream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
-            const data = `data: ${JSON.stringify({ text: event.delta.text })}\n\n`;
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta?.content;
+          if (delta) {
+            const data = `data: ${JSON.stringify({ text: delta })}\n\n`;
             controller.enqueue(encoder.encode(data));
           }
         }
